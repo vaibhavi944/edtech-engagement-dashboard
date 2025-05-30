@@ -2,12 +2,13 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 
 # Page setup
 st.title("🎯 EdTech Student Engagement Crisis Dashboard")
 st.subheader("Analyzing 30% Participation Drop - AI-Powered Solution")
 
-# Create sample data (this shows we can work with data!)
+# Create sample data
 np.random.seed(42)
 students = []
 for i in range(100):
@@ -27,27 +28,48 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     avg_pace = df['Learning_Pace_Score'].mean()
-    st.metric("Avg Learning Pace Score", f"{avg_pace:.1f}/100", 
-              delta=f"{avg_pace-70:.1f} vs target")
+    st.metric("Learning Pace Score", f"{avg_pace:.1f}/100", 
+              delta=f"{avg_pace-85:.1f} vs target")
 
 with col2:
     avg_clarity = df['Progress_Clarity_Score'].mean()
-    st.metric("Avg Progress Clarity Score", f"{avg_clarity:.1f}/100",
-              delta=f"{avg_clarity-70:.1f} vs target")
+    st.metric("Progress Clarity Score", f"{avg_clarity:.1f}/100",
+              delta=f"{avg_clarity-85:.1f} vs target")
 
 with col3:
     at_risk = len(df[df['Participation_Status'] == 'At Risk'])
     st.metric("Students At Risk", f"{at_risk}", 
               delta=f"-{at_risk} need intervention")
 
-# Crisis Analysis
-st.subheader("🚨 Crisis Analysis")
-fig1 = px.scatter(df, x='Learning_Pace_Score', y='Progress_Clarity_Score', 
-                  color='Participation_Status',
-                  title="Student Risk Positioning Map")
-fig1.add_hline(y=50, line_dash="dash", line_color="red")
-fig1.add_vline(x=50, line_dash="dash", line_color="red")
-st.plotly_chart(fig1)
+# KPI Performance Chart - CLEAN BAR CHART
+st.subheader("📊 KPI Performance Analysis")
+kpi_data = {
+    'KPI': ['Learning Pace Score', 'Progress Clarity Score', 'Target Score'],
+    'Score': [avg_pace, avg_clarity, 85.0],
+    'Status': ['Current', 'Current', 'Target']
+}
+kpi_df = pd.DataFrame(kpi_data)
+
+fig1 = px.bar(kpi_df, 
+              x='KPI', y='Score', 
+              color='Status',
+              title="Current Performance vs Target (85/100)",
+              color_discrete_map={'Current': '#ff6b6b', 'Target': '#51cf66'},
+              text='Score')
+fig1.update_traces(texttemplate='%{text:.1f}', textposition='outside')
+fig1.update_layout(yaxis_range=[0, 100])
+st.plotly_chart(fig1, use_container_width=True)
+
+# Student Risk Distribution - CLEAN BAR CHART
+st.subheader("🚨 Student Risk Distribution")
+risk_counts = df['Participation_Status'].value_counts()
+fig2 = px.bar(x=risk_counts.index, y=risk_counts.values,
+              title="Active vs At-Risk Students",
+              color=risk_counts.index,
+              color_discrete_map={'Active': '#51cf66', 'At Risk': '#ff6b6b'},
+              text=risk_counts.values)
+fig2.update_traces(texttemplate='%{text} students', textposition='outside')
+st.plotly_chart(fig2, use_container_width=True)
 
 # AI Insights Box
 st.subheader("🤖 AI-Generated Insights")
